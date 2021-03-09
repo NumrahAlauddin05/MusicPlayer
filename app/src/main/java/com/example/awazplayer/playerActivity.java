@@ -24,6 +24,7 @@ import android.widget.Toast;
 import com.gauravk.audiovisualizer.visualizer.BarVisualizer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static com.example.awazplayer.MainActivity.musicList;
@@ -36,7 +37,7 @@ public class playerActivity extends AppCompatActivity {
     ImageView imageView;
     String sname;
     public static final String EXTRA_NAME = "song_name";
-    static MediaPlayer mediaPlayer;
+    MediaPlayer mediaPlayer;
     int position;
     static ArrayList<Music> mySongs;
     Thread updateseekbar;
@@ -96,10 +97,21 @@ public class playerActivity extends AppCompatActivity {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
-            mediaPlayer = MediaPlayer.create(this, uri);
+            mediaPlayer=new MediaPlayer();
+            try {
+                mediaPlayer.setDataSource(getApplicationContext(),uri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            // mediaPlayer = MediaPlayer.create(playerActivity.this, uri);
             mediaPlayer.start();
         } else {
-            mediaPlayer = MediaPlayer.create(this, uri);
+            mediaPlayer=new MediaPlayer();
+            try {
+                mediaPlayer.setDataSource(getApplicationContext(),uri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             mediaPlayer.start();
         }
 
@@ -190,10 +202,17 @@ public class playerActivity extends AppCompatActivity {
                 mediaPlayer.stop();
                 mediaPlayer.release();
                 position = ((position + 1) % mySongs.size());
-                Uri u = Uri.parse(mySongs.get(position).toString());
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
+                Uri u = Uri.parse(mySongs.get(position).getPath());
+                //mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
                 sname = mySongs.get(position).getTitle();
                 txtsname.setText(sname);
+                mediaPlayer=new MediaPlayer();
+                try {
+                    mediaPlayer.setDataSource(getApplicationContext(),u);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                // mediaPlayer = MediaPlayer.create(playerActivity.this, uri);
                 mediaPlayer.start();
                 playbtn.setBackgroundResource(R.drawable.ic_pause);
                 startAnimation(imageView);
