@@ -105,18 +105,18 @@ public class playerActivity extends AppCompatActivity {
             mediaPlayer.stop();
             mediaPlayer.release();
 
-            mediaPlayer=new MediaPlayer();
+            mediaPlayer = new MediaPlayer();
             mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
             mediaPlayer.start();
             Toast.makeText(this, "hello2", Toast.LENGTH_SHORT).show();
         } else {
-            Log.e("uri ",String.valueOf(uri));
-            mediaPlayer=new MediaPlayer();
+            Log.e("uri ", String.valueOf(uri));
+            mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
             //mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
             try {
-                mediaPlayer.setDataSource(getApplicationContext(),uri);
+                mediaPlayer.setDataSource(getApplicationContext(), uri);
                 mediaPlayer.prepare();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -153,57 +153,8 @@ public class playerActivity extends AppCompatActivity {
 //        }
 
 //
-        updateseekbar = new Thread() {
-            @Override
-            public void run() {
-                int totalDuration = mediaPlayer.getDuration();
-                int currentposition = 0;
-                while (currentposition < totalDuration) {
-                    try {
-                        sleep(500);
-                        currentposition = mediaPlayer.getCurrentPosition();
-                        seekmusic.setProgress(currentposition);
-                    } catch (InterruptedException | IllegalStateException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-
-        seekmusic.setMax(mediaPlayer.getDuration());
-        updateseekbar.start();
-        seekmusic.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
-        seekmusic.getThumb().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_IN);
-        seekmusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mediaPlayer.seekTo(seekBar.getProgress());
-
-            }
-        });
-        String endTime = createTime(mediaPlayer.getDuration());
-        txtsstop.setText(endTime);
-        final Handler handler = new Handler();
-        final int delay = 1000;
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                String currentTime = createTime(mediaPlayer.getCurrentPosition());
-                txtsstart.setText(currentTime);
-                handler.postDelayed(this, delay);
-
-            }
-        }, delay);
+        setUpdateseekbar();
+        entTimeSet();
 
         playbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -224,6 +175,7 @@ public class playerActivity extends AppCompatActivity {
 
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+                Log.e("complete", "abc");
                 btnnext.performClick();
 
             }
@@ -236,27 +188,34 @@ public class playerActivity extends AppCompatActivity {
         btnnext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.e("complete", "xyz");
                 mediaPlayer.stop();
                 mediaPlayer.release();
                 position = ((position + 1) % mySongs.size());
                 Uri u = Uri.parse(mySongs.get(position).getPath());
-                //mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
                 sname = mySongs.get(position).getTitle();
                 txtsname.setText(sname);
-                mediaPlayer = new MediaPlayer();
-                try {
-                    mediaPlayer.setDataSource(getApplicationContext(), u);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                // mediaPlayer = MediaPlayer.create(playerActivity.this, uri);
+
                 mediaPlayer.start();
+                setUpdateseekbar();
+                entTimeSet();
                 playbtn.setBackgroundResource(R.drawable.ic_pause);
                 startAnimation(imageView);
                 int audiosessionId = mediaPlayer.getAudioSessionId();
                 if (audiosessionId != -1) {
                     visualizer.setAudioSessionId(audiosessionId);
                 }
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        Log.e("complete", "abc");
+                        btnnext.performClick();
+
+                    }
+                });
+
             }
         });
 
@@ -271,6 +230,8 @@ public class playerActivity extends AppCompatActivity {
                 sname = mySongs.get(position).getTitle();
                 txtsname.setText(sname);
                 mediaPlayer.start();
+                setUpdateseekbar();
+                entTimeSet();
                 playbtn.setBackgroundResource(R.drawable.ic_pause);
                 startAnimation(imageView);
                 int audiosessionId = mediaPlayer.getAudioSessionId();
@@ -322,5 +283,63 @@ public class playerActivity extends AppCompatActivity {
         return time;
     }
 
+    void setUpdateseekbar() {
+
+        updateseekbar = new Thread() {
+            @Override
+            public void run() {
+                int totalDuration = mediaPlayer.getDuration();
+                int currentposition = 0;
+                while (currentposition < totalDuration) {
+                    try {
+                        sleep(500);
+                        currentposition = mediaPlayer.getCurrentPosition();
+                        seekmusic.setProgress(currentposition);
+                    } catch (InterruptedException | IllegalStateException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        seekmusic.setMax(mediaPlayer.getDuration());
+        updateseekbar.start();
+        seekmusic.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
+        seekmusic.getThumb().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_IN);
+        seekmusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mediaPlayer.seekTo(seekBar.getProgress());
+
+            }
+        });
+
+    }
+
+    void entTimeSet() {
+        String endTime = createTime(mediaPlayer.getDuration());
+        txtsstop.setText(endTime);
+        final Handler handler = new Handler();
+        final int delay = 1000;
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                String currentTime = createTime(mediaPlayer.getCurrentPosition());
+                txtsstart.setText(currentTime);
+                handler.postDelayed(this, delay);
+
+            }
+        }, delay);
+
+    }
 
 }
